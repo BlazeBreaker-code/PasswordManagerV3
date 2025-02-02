@@ -20,3 +20,22 @@ A secure, user-friendly password manager built with **Python** and **PyQt6**. Th
    ```bash
    git clone https://github.com/yourusername/password-manager.git
    ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run the application:
+   ```bash
+   python main.py
+   ```
+
+## Adding a New Password Entry
+1. Open the application and click on "Add Entry" in the main menu.
+2. Choose whether to add the entry to an existing folder or create a new folder.
+3. Enter the service name (e.g., Gmail), username, and password.
+4. Click Save to add the entry to the password manager.
+
+## Retrieving a Password
+1. Click on "Retrieve Password" from the main menu.
+2. Select a folder (if you've organized your entries into folders).
+3. Enter the service name (e.g., Gmail) to find the associated password.
