@@ -47,3 +47,7 @@ class PasswordController:
             raise ValueError(f"Service '{service_name}' not found in folder '{folder_name}'.")
         encrypted_password = folder_data[service_name]["password"]
         return self.data_manager.decrypt_password(encrypted_password)
+
+    def backup_to_firebase(self):
+        """Backup the password data to Firebase"""
+        self.data_manager.backup_to_firebase()

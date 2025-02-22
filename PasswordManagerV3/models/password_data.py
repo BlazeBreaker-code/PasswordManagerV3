@@ -1,5 +1,10 @@
+import atexit
 import os
+import requests
 import sys
+import time
+from urllib import response
+from datetime import datetime
 from cryptography.fernet import Fernet
 import json
 
@@ -28,8 +33,11 @@ if not os.path.exists(json_path):
 
 class PasswordData:
     def __init__(self, file_path=None):
-        self.file_path = file_path if file_path else os.path.join(persistent_path, 'passwords.json')
+        self.file_path = os.path.join(persistent_path, 'data', 'passwords.json') if file_path is None else file_path
         self.data = self.load_data()
+        # Backup the passwords and then clean up the backups (this is a stacked operation).
+        atexit.register(self.cleanup_backups_in_firebase)
+        atexit.register(self.backup_password_to_firebase)
 
     def load_data(self):
         try:
@@ -91,3 +99,52 @@ class PasswordData:
             return cipher.decrypt(encrypted_password.encode()).decode()
         except Exception as e:
             raise ValueError(f"Failed to decrypt the password: {e}")
+
+    @staticmethod
+    def generate_timestamp_filename():
+        """Generate a timestamp-based filename."""
+        timestamp = int(time.time())
+        # Formatted so it is readable.
+        readable_time = datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
+        return readable_time
+
+    def backup_password_to_firebase(self):
+        try:
+            filename = self.generate_timestamp_filename() + "_passwords"
+
+            password_data = self.data
+            url = f"https://passwordmanager-surajm99-default-rtdb.firebaseio.com/{filename}.json"
+            response = requests.put(url, data=json.dumps(password_data))
+
+            if response.status_code == 200:
+                print("Password data successfully uploaded to Firebase!")
+            else:
+                print(f"Failed to upload data. Status Code: {response.status_code}, Error: {response.text}")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+    def cleanup_backups_in_firebase(self):
+        try:
+            url = "https://passwordmanager-surajm99-default-rtdb.firebaseio.com/.json"
+            response = requests.get(url)
+
+            data = response.json()
+            print(data)
+            filenames = list(data.keys())
+            
+            if len(filenames) > 5:
+                filenames.sort()
+                for filename in filenames[:-5]:
+                    delete_url = f"https://passwordmanager-surajm99-default-rtdb.firebaseio.com/{filename}.json"
+                    try:
+                        delete_response = requests.delete(delete_url)
+                        if delete_response.status_code == 200:
+                            print(f"Successfully deleted old backup: {filename}")
+                        else:
+                            print(f"Failed to delete {filename}. Status Code: {delete_response.status_code}, Error: {delete_response.text}")
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
