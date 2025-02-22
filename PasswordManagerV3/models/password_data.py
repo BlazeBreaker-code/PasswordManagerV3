@@ -130,7 +130,6 @@ class PasswordData:
             response = requests.get(url)
 
             data = response.json()
-            print(data)
             filenames = list(data.keys())
             
             if len(filenames) > 5:
